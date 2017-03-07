@@ -60,6 +60,76 @@ void DemoBase::init(int argc, char **argv, const char *demoName)
     getSimulationMethod().model.setSaveDataPath(m_scene.saveDataPath);
     getSimulationMethod().model.setFrameTime(m_scene.frameTime);
 
+    for(unsigned int i = 0; i < m_scene.boundaryModels.size(); i++)
+    {
+        if(m_scene.boundaryModels[i]->isWall)
+        {
+            Vector3r bmin(-0.5, -0.5, -0.5);
+            Vector3r bmax(0.5, 0.5, 0.5);
+
+            for(int j = 0; j < 3; ++j)
+            {
+                bmin[j] *= m_scene.boundaryModels[i]->scale[j];
+                bmax[j] *= m_scene.boundaryModels[i]->scale[j];
+            }
+            bmin = m_scene.boundaryModels[i]->rotation * bmin + m_scene.boundaryModels[i]->translation;
+            bmax = m_scene.boundaryModels[i]->rotation * bmax + m_scene.boundaryModels[i]->translation;
+
+            //bmin += m_scene.boundaryModels[i]->translation;
+            //bmax += m_scene.boundaryModels[i]->translation;
+
+            //for(int j = 0; j < 3; ++j)
+            //{
+            //    bmin[j] *= m_scene.boundaryModels[i]->scale[j];
+            //    bmax[j] *= m_scene.boundaryModels[i]->scale[j];
+            //}
+
+            //bmin = m_scene.boundaryModels[i]->rotation * bmin;
+            //bmax = m_scene.boundaryModels[i]->rotation * bmax;
+
+
+            std::vector<std::string> vec_str;
+            vec_str.push_back("boundary_min_x " + std::to_string(bmin[0]));
+            vec_str.push_back("boundary_min_y " + std::to_string(bmin[1]));
+            vec_str.push_back("boundary_min_z " + std::to_string(bmin[2]));
+            vec_str.push_back("boundary_max_x " + std::to_string(bmax[0]));
+            vec_str.push_back("boundary_max_y " + std::to_string(bmax[1]));
+            vec_str.push_back("boundary_max_z " + std::to_string(bmax[2]));
+            vec_str.push_back("");
+            vec_str.push_back("movable_min_x " + std::to_string(bmin[0]));
+            vec_str.push_back("movable_min_y " + std::to_string(bmin[1]));
+            vec_str.push_back("movable_min_z " + std::to_string(bmin[2]));
+            vec_str.push_back("movable_max_x " + std::to_string(bmax[0]));
+            vec_str.push_back("movable_max_y " + std::to_string(bmax[1]));
+            vec_str.push_back("movable_max_z " + std::to_string(bmax[2]));
+            vec_str.push_back("");
+            vec_str.push_back("num_fluid_particles 0");
+            vec_str.push_back("max_fluid_particles 0");
+            vec_str.push_back("fluid_particle_radius " + std::to_string(m_scene.particleRadius));
+
+            // create data folder
+            char buff[512];
+#ifdef _WIN32
+            sprintf_s(buff, "%s", m_scene.saveDataPath.c_str());
+            CreateDirectoryA(buff, NULL);
+#else
+            sprintf(buff, "mkdir -p %s", m_scene.saveDataPath.c_str());
+            system(buff);
+#endif
+
+            // save file
+            std::ofstream file(m_scene.saveDataPath + "/viz_info.txt", std::ios::out);
+            assert(file.is_open());
+
+            for(const std::string& s : vec_str)
+            {
+                file << s << std::endl;
+            }
+
+            file.close();
+        }
+    }
+
     // OpenGL
     MiniGL::init(argc, argv, 1024, 768, 0, 0, demoName);
     MiniGL::initLights();
