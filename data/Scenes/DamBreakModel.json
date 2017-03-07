@@ -7,7 +7,7 @@
 	"Configuration": 
 	{
 		"timeStepSize": 0.001,
-		"particleRadius": 0.025, 
+		"particleRadius": 0.0125, 
 		"density0": 1000, 
 		"simulationMethod": 4,
 		"viscosity": 0.03,
@@ -42,8 +42,8 @@
 	"FluidBlocks": [
 		{
 			"denseMode": 0,
-			"start": [-0.5, 0.0, -0.5],
-			"end": [0.5, 1.0, 0.5],
+			"start": [-0.5, 0.025, -0.5],
+			"end": [0.5, 2.025, 0.5],
 			"translation": [-1.45, 0.0, 0.0],
 			"scale": [1, 1, 1]
 		}
