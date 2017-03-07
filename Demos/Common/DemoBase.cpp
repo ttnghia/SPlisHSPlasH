@@ -75,19 +75,6 @@ void DemoBase::init(int argc, char **argv, const char *demoName)
             bmin = m_scene.boundaryModels[i]->rotation * bmin + m_scene.boundaryModels[i]->translation;
             bmax = m_scene.boundaryModels[i]->rotation * bmax + m_scene.boundaryModels[i]->translation;
 
-            //bmin += m_scene.boundaryModels[i]->translation;
-            //bmax += m_scene.boundaryModels[i]->translation;
-
-            //for(int j = 0; j < 3; ++j)
-            //{
-            //    bmin[j] *= m_scene.boundaryModels[i]->scale[j];
-            //    bmax[j] *= m_scene.boundaryModels[i]->scale[j];
-            //}
-
-            //bmin = m_scene.boundaryModels[i]->rotation * bmin;
-            //bmax = m_scene.boundaryModels[i]->rotation * bmax;
-
-
             std::vector<std::string> vec_str;
             vec_str.push_back("boundary_min_x " + std::to_string(bmin[0]));
             vec_str.push_back("boundary_min_y " + std::to_string(bmin[1]));

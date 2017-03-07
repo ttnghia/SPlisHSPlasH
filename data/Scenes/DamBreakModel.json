@@ -1,4 +1,9 @@
 {
+	"FrameConfigs": 
+	{
+		"SaveDataPath": "D:/Scratch/SimData/FluidSim",
+		"FrameTime": 0.01
+	},
 	"Configuration": 
 	{
 		"timeStepSize": 0.001,
