@@ -9,6 +9,7 @@
 #include "SPHKernels.h"
 
 #include "DataIO.h"
+#include "SVD.h"
 
 namespace SPH
 {
@@ -45,6 +46,7 @@ public:
     typedef PrecomputedKernel<CubicKernel, 10000> PrecomputedCubicKernel;
 
 
+    void generateAniKernels(std::vector<Vector3r>& kernelCenter, std::vector<Matrix3r>& kernelMatrices);
     void writeFrameData(Real currentTime);
     void setSaveDataPath(std::string savePath)
     {

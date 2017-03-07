@@ -253,6 +253,28 @@ public:
         }
     }
 
+    void push_back_to_float_array(const std::vector<Matrix3r>& vData, bool bWriteVectorSize = true)
+    {
+        if(bWriteVectorSize)
+        {
+            const unsigned int numElements = (unsigned int)vData.size();
+            push_back(numElements);
+        }
+
+        size_t dataSize = vData.size() * sizeof(float) * 9;
+        size_t endOffset = m_Buffer.size();
+        resize(endOffset + dataSize);
+
+        float* buff_ptr = (float*) & (m_Buffer.data()[endOffset]);
+
+        for(size_t i = 0; i < vData.size(); ++i)
+        {
+            const Real* data_ptr = &(vData[i](0, 0));
+            for(int j = 0; j < 9; ++j)
+                buff_ptr[i * 9 + j] = static_cast<float>(data_ptr[j]);
+        }
+    }
+
 
     template<class T>
     void push_back_to_double(T value)

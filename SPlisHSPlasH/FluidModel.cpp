@@ -352,6 +352,123 @@ void SPH::FluidModel::setKernel(unsigned int val)
 
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#define AniGen_Lambda 0.5
+#define AniGen_NeighborCountThreshold 25
+#define AniGen_Kr 4
+
+void SPH::FluidModel::generateAniKernels(std::vector<Vector3r>& kernelCenters, std::vector<Matrix3r>& kernelMatrices)
+{
+
+    static Real aniKernelRadius = 8.0 * m_particleRadius;
+    static Real aniKernelRadiusInv = 1.0 / m_particleRadius;
+    static Real aniKernelRadiusSqr = aniKernelRadius*aniKernelRadius;
+    const int numFluidParticles = (int)numParticles();
+    static auto kernelW =[](Real d, Real aniKernelRadiusInv)
+    {
+        return 1.0 - pow(d * aniKernelRadiusInv, 3);
+    };
+
+    kernelCenters.resize(m_particleObjects[0]->m_x.size());
+    kernelMatrices.resize(m_particleObjects[0]->m_x.size());
+
+    static CompactNSearch::NeighborhoodSearch* aniNeighborhoodSearch = nullptr;
+
+    if(aniNeighborhoodSearch == nullptr)
+    {
+        aniNeighborhoodSearch = new CompactNSearch::NeighborhoodSearch(m_supportRadius, false);
+        aniNeighborhoodSearch->set_radius(aniKernelRadius);
+        aniNeighborhoodSearch->add_point_set(&getPosition(0, 0)[0], m_particleObjects[0]->m_x.size(), true, true);
+    }
+
+    aniNeighborhoodSearch->find_neighbors();
+
+
+#pragma omp parallel default(shared)
+    {
+#pragma omp for schedule(static)  
+        for(int i = 0; i < numFluidParticles; i++)
+        {
+            const Vector3r &xi = getPosition(0, i);
+
+            Vector3r pposWM = xi;
+            Real sumW = 1.0;
+            unsigned int numNeighbors = static_cast<unsigned int>(aniNeighborhoodSearch->point_set(0).n_neighbors(i));
+
+            for(unsigned int j = 0; j < numNeighbors; j++)
+            {
+                const CompactNSearch::PointID &particleId = aniNeighborhoodSearch->point_set(0).neighbor(i, j);
+                const Vector3r &xj = getPosition(0, particleId.point_id);
+
+                const Vector3r xij = xj - xi;
+                const Real d2 = xij.squaredNorm();
+                if(d2 < aniKernelRadiusSqr)
+                {
+                    const Real wij = kernelW(sqrt(d2), aniKernelRadiusInv);
+                    sumW += wij;
+                    pposWM += wij * xj;
+                }
+            }
+
+            assert(sumW > 0);
+            pposWM /= sumW;
+            kernelCenters[i] = (1.0 - AniGen_Lambda)*xi + AniGen_Lambda*pposWM;
+
+
+            ////////////////////////////////////////////////////////////////////////////////
+            // compute covariance matrix and anisotropy matrix
+            unsigned int neighborCount = 0;
+            Matrix3r C = (xi - pposWM)*(xi - pposWM).transpose();
+            sumW = 1.0;
+
+            for(unsigned int j = 0; j < numNeighbors; j++)
+            {
+                const CompactNSearch::PointID &particleId = aniNeighborhoodSearch->point_set(0).neighbor(i, j);
+                const Vector3r &xj = getPosition(0, particleId.point_id);
+
+                const Vector3r xij = xj - pposWM;
+                const Real d2 = xij.squaredNorm();
+                if(d2 < aniKernelRadiusSqr)
+                {
+                    const Real wij = kernelW(sqrt(d2), aniKernelRadiusInv);
+                    sumW += wij;
+
+                    C += wij * xij * xij.transpose();
+
+                    ++neighborCount;
+                }
+            }
+
+            assert(sumW > 0);
+            C /= sumW; // = covariance matrix
+
+                       ////////////////////////////////////////////////////////////////////////////////
+                       // compute kernel matrix
+            Matrix3r U, S, V;
+            SVDDecomposition::svd(C(0, 0), C(0, 1), C(0, 2), C(1, 0), C(1, 1), C(1, 2), C(2, 0), C(2, 1), C(2, 2),
+                                  U(0, 0), U(0, 1), U(0, 2), U(1, 0), U(1, 1), U(1, 2), U(2, 0), U(2, 1), U(2, 2),
+                                  S(0, 0), S(0, 1), S(0, 2), S(1, 0), S(1, 1), S(1, 2), S(2, 0), S(2, 1), S(2, 2),
+                                  V(0, 0), V(0, 1), V(0, 2), V(1, 0), V(1, 1), V(1, 2), V(2, 0), V(2, 1), V(2, 2));
+
+            Vector3r sigmas = static_cast<Real>(0.75) * Vector3r(1, 1, 1);
+
+            if(neighborCount > AniGen_NeighborCountThreshold)
+            {
+                sigmas = Vector3r(S(0, 0), std::max(S(1, 1), S(0, 0) / AniGen_Kr), std::max(S(2, 2), S(0, 0) / AniGen_Kr));
+                Real ks = std::cbrt(1.0 / (sigmas[0] * sigmas[1] * sigmas[2]));          // scale so that det(covariance) == 1
+                sigmas *= ks;
+            }
+
+            S << sigmas[0], 0.0, 0.0,
+                0.0, sigmas[1], 0.0,
+                0.0, 0.0, sigmas[2];
+            kernelMatrices[i] = U * S * U.transpose();
+        }
+
+    }
+
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void SPH::FluidModel::writeFrameData(Real currentTime)
 {
     static double savedFrameTime = -1000.0;
@@ -392,10 +509,14 @@ void SPH::FluidModel::writeFrameData(Real currentTime)
     }
 
     ////////////////////////////////////////////////////////////////////////////////
+    static std::vector<Vector3r> kernelCenters;
+    static std::vector<Matrix3r> kernelMatrices;
+    generateAniKernels(kernelCenters, kernelMatrices);
+
     m_FluidPosWriter->reset_buffer();
     m_FluidPosWriter->getBuffer().push_back(static_cast<unsigned int>(numParticles()));
     m_FluidPosWriter->getBuffer().push_back_to_float(m_particleRadius);
-    m_FluidPosWriter->getBuffer().push_back_to_float_array(m_particleObjects[0]->m_x, false);
+    m_FluidPosWriter->getBuffer().push_back_to_float_array(kernelCenters, false);
     m_FluidPosWriter->flush_buffer_async(frame);
 
     m_FluidVelWriter->reset_buffer();
@@ -403,8 +524,7 @@ void SPH::FluidModel::writeFrameData(Real currentTime)
     m_FluidVelWriter->flush_buffer_async(frame);
 
 
-    //m_AniKernelGenerator->generateAnisotropy();
-    //dataIO->reset_buffer();
-    //dataIO->getBuffer().push_back_to_float_array(m_AniKernelGenerator->getKernelMatrices());
-    //dataIO->flush_buffer_async(frame);
+    m_FluidAnisotropyWriter->reset_buffer();
+    m_FluidAnisotropyWriter->getBuffer().push_back_to_float_array(kernelMatrices);
+    m_FluidAnisotropyWriter->flush_buffer_async(frame);
 }
