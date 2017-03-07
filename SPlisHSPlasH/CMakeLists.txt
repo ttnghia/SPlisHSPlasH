@@ -94,6 +94,8 @@ add_library(SPlisHSPlasH
 	Common.h
 	FluidModel.cpp
 	FluidModel.h
+	DataIO.cpp
+	DataIO.h
 	RigidBodyObject.h
 	SPHKernels.cpp
 	SPHKernels.h

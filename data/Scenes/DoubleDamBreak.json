@@ -3,6 +3,11 @@
 	{
 		"particleRadius": 0.025	
 	},
+	"FrameConfigs": 
+	{
+		"SaveDataPath": "D:/Scratch/SimData/FluidSim",
+		"FrameTime": 0.01
+	},
 	"RigidBodies": [
 		{
 			"geometryFile": "../models/UnitBox.obj",
