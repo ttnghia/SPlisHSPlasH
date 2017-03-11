@@ -1,8 +1,14 @@
 {
 	"Configuration": 
 	{
-		"particleRadius": 0.015
+		"particleRadius": 0.017
 	},
+	"FrameConfigs": 
+	{
+		"SaveDataPath": "D:/Scratch/SimData/DamBreakWithToruses",
+		"FrameTime": 0.0166666666666666
+	},
+
 	"Simulation": 
 	{
 		"timeStepSize": 0.005,
@@ -48,43 +54,42 @@
 		},
 		{
 			"id": 2,
-			"geometryFile": "../models/cylinder.obj",
+			"geometryFile": "../models/torus.obj",
 			"isDynamic": 1, 
-			"density": 700, 
-			"translation": [-0.3, 3.5, 0],
-			"rotationAxis": [1, 1, 1],
-			"rotationAngle": 0.5,
-			"scale": [0.12, 0.7, 0.12],
+			"density": 100, 
+			"translation": [-0.3,3.5,0.0],
+			"rotationAxis": [0, 0, 1],
+			"rotationAngle": 2.5,
+			"scale": [0.25, 0.25, 0.25],
 			"restitution" : 0.6,
 			"friction" : 0.2,
-			"color": [0.2, 0.6, 0.4, 1.0], 
-			"collisionObjectType": 3,
-			"collisionObjectScale": [0.1, 0.5, 0.1]
+			"color": [0.5, 0.2, 0.6, 1.0], 
+			"collisionObjectType": 4,
+			"collisionObjectScale": [0.2, 0.1, 0.2]	
 		},
 		{
 			"id": 3,
-			"geometryFile": "../models/sphere.obj",
+			"geometryFile": "../models/torus.obj",
 			"isDynamic": 1, 
-			"density": 200, 
-			"translation": [0.0,2.5,0],
-			"rotationAxis": [1, 0, 0],
+			"density": 300, 
+			"translation": [0.0,2.5,0.0],
+			"rotationAxis": [0, 0, 1],
 			"rotationAngle": 0.0,
 			"scale": [0.25, 0.25, 0.25],
-			"velocity": [0,0,0],
 			"restitution" : 0.6,
 			"friction" : 0.2,
-			"color": [0.3, 0.5, 0.8, 1.0], 
-			"collisionObjectType": 1,
-			"collisionObjectScale": [0.2, 0.2, 0.2]
+			"color": [0.5, 0.2, 0.6, 1.0], 
+			"collisionObjectType": 4,
+			"collisionObjectScale": [0.2, 0.1, 0.2]	
 		}, 
 		{
 			"id": 4,
 			"geometryFile": "../models/torus.obj",
 			"isDynamic": 1, 
-			"density": 100, 
+			"density": 500, 
 			"translation": [0.3,1.5,0.0],
 			"rotationAxis": [0, 0, 1],
-			"rotationAngle": 1.0,
+			"rotationAngle": 1,
 			"scale": [0.25, 0.25, 0.25],
 			"restitution" : 0.6,
 			"friction" : 0.2,
