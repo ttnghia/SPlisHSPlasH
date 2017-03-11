@@ -1,13 +1,13 @@
 {
 	"FrameConfigs": 
 	{
-		"SaveDataPath": "D:/Scratch/SimData/FluidSim",
-		"FrameTime": 0.01
+		"SaveDataPath": "D:/Scratch/SimData/DamBreak",
+		"FrameTime": 0.0166666666666666
 	},
 	"Configuration": 
 	{
 		"timeStepSize": 0.001,
-		"particleRadius": 0.0125, 
+		"particleRadius": 0.025, 
 		"density0": 1000, 
 		"simulationMethod": 4,
 		"viscosity": 0.03,

@@ -178,5 +178,8 @@ void DataIO::create_output_folders()
     system(buff2);
 #endif
 
+    printf("Created dir: %s\n", buff1);
+    printf("Created dir: %s\n", buff2);
+
     m_isOutputFolderCreated = true;
 }

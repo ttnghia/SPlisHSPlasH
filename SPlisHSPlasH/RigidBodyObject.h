@@ -3,11 +3,11 @@
 
 #include "Common.h"
 
-namespace SPH 
-{	
-	/** \brief Base class for rigid body objects. 
+namespace SPH
+{
+	/** \brief Base class for rigid body objects.
 	*/
-	class RigidBodyObject 
+	class RigidBodyObject
 	{
 	public:
 		virtual ~RigidBodyObject() {};
@@ -24,4 +24,4 @@ namespace SPH
 	};
 }
 
-#endif 
+#endif

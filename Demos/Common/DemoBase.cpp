@@ -19,22 +19,20 @@ using namespace std;
 DemoBase::DemoBase()
 {
     m_numberOfStepsPerRenderUpdate = 8;
-    m_sceneFile = "";
-    m_renderWalls = 4;
-    m_doPause = true;
-    m_pauseAt = -1.0;
-    m_useParticleCaching = true;
-    m_simulationMethodChangedFct = NULL;
+    m_sceneFile                    = "";
+    m_renderWalls                  = 4;
+    m_doPause                      = true;
+    m_pauseAt                      = -1.0;
+    m_useParticleCaching           = true;
+    m_simulationMethodChangedFct   = NULL;
 }
 
 DemoBase::~DemoBase()
-{
+{}
 
-}
-
-void DemoBase::init(int argc, char **argv, const char *demoName)
+void DemoBase::init(int argc, char** argv, const char* demoName)
 {
-    m_exePath = FileSystem::getProgramPath();
+    m_exePath  = FileSystem::getProgramPath();
     m_dataPath = FileSystem::normalizePath(getExePath() + "/" + std::string(SPH_DATA_PATH));
 
     m_sceneFile = getDataPath() + "/Scenes/DoubleDamBreak.json";
@@ -59,6 +57,12 @@ void DemoBase::init(int argc, char **argv, const char *demoName)
 
     getSimulationMethod().model.setSaveDataPath(m_scene.saveDataPath);
     getSimulationMethod().model.setFrameTime(m_scene.frameTime);
+    if(m_MeshWriter == nullptr)
+    {
+        m_MeshWriter = new DataIO(m_scene.saveDataPath, "SolidFrame", "frame", "pos");
+    }
+
+
 
     for(unsigned int i = 0; i < m_scene.boundaryModels.size(); i++)
     {
@@ -117,6 +121,8 @@ void DemoBase::init(int argc, char **argv, const char *demoName)
         }
     }
 
+
+    ////////////////////////////////////////////////////////////////////////////////
     // OpenGL
     MiniGL::init(argc, argv, 1024, 768, 0, 0, demoName);
     MiniGL::initLights();
@@ -178,7 +184,7 @@ void DemoBase::initShaders()
 }
 
 
-void DemoBase::meshShaderBegin(const float *col)
+void DemoBase::meshShaderBegin(const float* col)
 {
     m_meshShader.begin();
     glUniform1f(m_meshShader.getUniform("shininess"), 5.0f);
@@ -198,7 +204,7 @@ void DemoBase::meshShaderEnd()
     m_meshShader.end();
 }
 
-void DemoBase::pointShaderBegin(const float *col)
+void DemoBase::pointShaderBegin(const float* col)
 {
     m_shader.begin();
 
@@ -294,7 +300,7 @@ void DemoBase::initParameters()
     }
 
 
-    for(auto &p : m_parameters)
+    for(auto & p : m_parameters)
     {
         TwAddVarCB(MiniGL::getTweakBar(), p.name.c_str(), p.type, setParameter, getParameter, &p, p.tweakBarDefinition.c_str());
     }
@@ -326,7 +332,7 @@ void DemoBase::buildModel()
 
     std::cout << "Number of boundary particles: " << nBoundaryParticles << "\n";
 
-    m_simulationMethod.simulation = new TimeStepDFSPH(&m_simulationMethod.model);
+    m_simulationMethod.simulation       = new TimeStepDFSPH(&m_simulationMethod.model);
     m_simulationMethod.simulationMethod = SimulationMethods::DFSPH;
     setSimulationMethod((SimulationMethods)m_scene.simulationMethod);
 
@@ -357,15 +363,15 @@ void DemoBase::buildModel()
 }
 
 
-void DemoBase::initFluidData(std::vector<Vector3r> &fluidParticles, std::vector<Vector3r> &fluidVelocities)
+void DemoBase::initFluidData(std::vector<Vector3r>& fluidParticles, std::vector<Vector3r>& fluidVelocities)
 {
     std::cout << "Initialize fluid particles\n";
     createFluidBlocks(fluidParticles);
 
-    std::string base_path = FileSystem::getFilePath(m_sceneFile);
+    std::string  base_path = FileSystem::getFilePath(m_sceneFile);
 
     unsigned int startIndex = 0;
-    unsigned int endIndex = 0;
+    unsigned int endIndex   = 0;
     for(unsigned int i = 0; i < m_scene.fluidModels.size(); i++)
     {
         string fileName = base_path + "/" + m_scene.fluidModels[i]->samplesFile;
@@ -375,15 +381,15 @@ void DemoBase::initFluidData(std::vector<Vector3r> &fluidParticles, std::vector<
 }
 
 
-void DemoBase::createFluidBlocks(std::vector<Vector3r> &fluidParticles)
+void DemoBase::createFluidBlocks(std::vector<Vector3r>& fluidParticles)
 {
     for(unsigned int i = 0; i < m_scene.fluidBlocks.size(); i++)
     {
-        const Real diam = 2.0*m_scene.particleRadius;
+        const Real diam = 2.0 * m_scene.particleRadius;
 
-        Real xshift = diam;
-        Real yshift = diam;
-        const Real eps = 1.0e-9;
+        Real       xshift = diam;
+        Real       yshift = diam;
+        const Real eps    = 1.0e-9;
         if(m_scene.fluidBlocks[i]->mode == 1)
             yshift = sqrt(3.0) * m_scene.particleRadius + eps;
         else if(m_scene.fluidBlocks[i]->mode == 2)
@@ -408,15 +414,15 @@ void DemoBase::createFluidBlocks(std::vector<Vector3r> &fluidParticles)
         const int stepsY = (int)round(diff[1] / yshift) - 1;
         const int stepsZ = (int)round(diff[2] / diam) - 1;
 
-        Vector3r start = m_scene.fluidBlocks[i]->box.m_minX + 2.0*m_scene.particleRadius*Vector3r::Ones();
-        fluidParticles.reserve(fluidParticles.size() + stepsX*stepsY*stepsZ);
+        Vector3r  start = m_scene.fluidBlocks[i]->box.m_minX + 2.0 * m_scene.particleRadius * Vector3r::Ones();
+        fluidParticles.reserve(fluidParticles.size() + stepsX * stepsY * stepsZ);
         for(int j = 0; j < stepsX; j++)
         {
             for(int k = 0; k < stepsY; k++)
             {
                 for(int l = 0; l < stepsZ; l++)
                 {
-                    Vector3r currPos = Vector3r(j*xshift, k*yshift, l*diam) + start;
+                    Vector3r currPos = Vector3r(j * xshift, k * yshift, l * diam) + start;
                     if(m_scene.fluidBlocks[i]->mode == 1)
                     {
                         if(k % 2 == 0)
@@ -446,121 +452,121 @@ void DemoBase::createFluidBlocks(std::vector<Vector3r> &fluidParticles)
     }
 }
 
-void TW_CALL DemoBase::setParameter(const void *value, void *clientData)
+void TW_CALL DemoBase::setParameter(const void* value, void* clientData)
 {
-    Parameter *p = ((Parameter*)clientData);
-    DemoBase *base = p->base;
-    SimulationMethod &sm = base->getSimulationMethod();
+    Parameter*        p    = ((Parameter*)clientData);
+    DemoBase*         base = p->base;
+    SimulationMethod& sm   = base->getSimulationMethod();
 
     if(p->id == ParameterIDs::TimeStepSize)
     {
-        const Real val = *(const Real *)(value);
+        const Real val = *(const Real*)(value);
         TimeManager::getCurrent()->setTimeStepSize(val);
     }
     else if(p->id == ParameterIDs::Gravitation)
     {
-        const Real *val = (const Real*)(value);
+        const Real*    val = (const Real*)(value);
         const Vector3r v(val[0], val[1], val[2]);
         sm.model.setGravitation(v);
     }
     else if(p->id == ParameterIDs::SimMethod)
     {
-        const short val = *(const short *)(value);
+        const short val = *(const short*)(value);
         base->setSimulationMethod((SimulationMethods)val);
     }
     else if(p->id == ParameterIDs::VelocityUpdateMethod)
     {
-        const short val = *(const short *)(value);
+        const short val = *(const short*)(value);
         sm.model.setVelocityUpdateMethod((unsigned int)val);
     }
     else if(p->id == ParameterIDs::Viscosity)
     {
-        const Real val = *(const Real *)(value);
+        const Real val = *(const Real*)(value);
         sm.model.setViscosity(val);
     }
     else if(p->id == ParameterIDs::SurfaceTension)
     {
-        const Real val = *(const Real *)(value);
+        const Real val = *(const Real*)(value);
         sm.model.setSurfaceTension(val);
     }
     else if(p->id == ParameterIDs::SurfaceTensionMethod)
     {
-        const short val = *(const short *)(value);
+        const short val = *(const short*)(value);
         sm.simulation->setSurfaceTensionMethod((SurfaceTensionMethods)val);
     }
     else if(p->id == ParameterIDs::ViscosityMethod)
     {
-        const short val = *(const short *)(value);
+        const short val = *(const short*)(value);
         sm.simulation->setViscosityMethod((ViscosityMethods)val);
     }
     else if(p->id == ParameterIDs::WCSPH_Stiffness)
     {
-        const Real val = *(const Real *)(value);
+        const Real val = *(const Real*)(value);
         sm.model.setStiffness(val);
     }
     else if(p->id == ParameterIDs::WCSPH_Exponent)
     {
-        const Real val = *(const Real *)(value);
+        const Real val = *(const Real*)(value);
         sm.model.setExponent(val);
     }
     else if(p->id == ParameterIDs::DFSPH_EnableDivergenceSolver)
     {
-        const bool val = *(const bool *)(value);
+        const bool val = *(const bool*)(value);
         sm.model.setEnableDivergenceSolver(val);
     }
     else if(p->id == ParameterIDs::CFL_Method)
     {
-        const short val = *(const short *)(value);
+        const short val = *(const short*)(value);
         sm.simulation->setCflMethod((unsigned int)val);
     }
     else if(p->id == ParameterIDs::CFL_Factor)
     {
-        const Real val = *(const Real *)(value);
+        const Real val = *(const Real*)(value);
         sm.simulation->setCflFactor(val);
     }
     else if(p->id == ParameterIDs::CFL_MaxTimeStepSize)
     {
-        const Real val = *(const Real *)(value);
+        const Real val = *(const Real*)(value);
         sm.simulation->setCflMaxTimeStepSize(val);
     }
     else if(p->id == ParameterIDs::Kernel_Method)
     {
-        const short val = *(const short *)(value);
+        const short val = *(const short*)(value);
         sm.model.setKernel((unsigned int)val);
         sm.model.updateBoundaryPsi();
     }
     else if(p->id == ParameterIDs::GradKernel_Method)
     {
-        const short val = *(const short *)(value);
+        const short val = *(const short*)(value);
         sm.model.setGradKernel((unsigned int)val);
     }
     else if(p->id == ParameterIDs::MaxIterations)
     {
-        sm.simulation->setMaxIterations(*(unsigned int *)(value));
+        sm.simulation->setMaxIterations(*(unsigned int*)(value));
     }
     else if(p->id == ParameterIDs::MaxError)
     {
-        sm.simulation->setMaxError(*(Real *)(value));
+        sm.simulation->setMaxError(*(Real*)(value));
     }
     else if(p->id == ParameterIDs::MaxIterationsV)
     {
-        sm.simulation->setMaxIterationsV(*(unsigned int *)(value));
+        sm.simulation->setMaxIterationsV(*(unsigned int*)(value));
     }
     else if(p->id == ParameterIDs::MaxErrorV)
     {
-        sm.simulation->setMaxErrorV(*(Real *)(value));
+        sm.simulation->setMaxErrorV(*(Real*)(value));
     }
 }
 
-void TW_CALL DemoBase::getParameter(void *value, void *clientData)
+void TW_CALL DemoBase::getParameter(void* value, void* clientData)
 {
-    Parameter *p = ((Parameter*)clientData);
-    DemoBase *base = p->base;
-    SimulationMethod &sm = base->getSimulationMethod();
+    Parameter*        p    = ((Parameter*)clientData);
+    DemoBase*         base = p->base;
+    SimulationMethod& sm   = base->getSimulationMethod();
 
     if(p->id == ParameterIDs::TimeStepSize)
     {
-        *(Real *)(value) = TimeManager::getCurrent()->getTimeStepSize();
+        *(Real*)(value) = TimeManager::getCurrent()->getTimeStepSize();
     }
     else if(p->id == ParameterIDs::IterationCount)
     {
@@ -578,82 +584,82 @@ void TW_CALL DemoBase::getParameter(void *value, void *clientData)
     }
     else if(p->id == ParameterIDs::Gravitation)
     {
-        const Vector3r &val = sm.model.getGravitation();
+        const Vector3r& val = sm.model.getGravitation();
         ((Real*)value)[0] = val[0];
         ((Real*)value)[1] = val[1];
         ((Real*)value)[2] = val[2];
     }
     else if(p->id == ParameterIDs::SimMethod)
     {
-        *(short *)(value) = sm.simulationMethod;
+        *(short*)(value) = sm.simulationMethod;
     }
     else if(p->id == ParameterIDs::VelocityUpdateMethod)
     {
-        *(short *)(value) = (short)sm.model.getVelocityUpdateMethod();
+        *(short*)(value) = (short)sm.model.getVelocityUpdateMethod();
     }
     else if(p->id == ParameterIDs::Viscosity)
     {
-        *(Real *)(value) = sm.model.getViscosity();
+        *(Real*)(value) = sm.model.getViscosity();
     }
     else if(p->id == ParameterIDs::SurfaceTension)
     {
-        *(Real *)(value) = sm.model.getSurfaceTension();
+        *(Real*)(value) = sm.model.getSurfaceTension();
     }
     else if(p->id == ParameterIDs::SurfaceTensionMethod)
     {
-        *(short *)(value) = (short)sm.simulation->getSurfaceTensionMethod();
+        *(short*)(value) = (short)sm.simulation->getSurfaceTensionMethod();
     }
     else if(p->id == ParameterIDs::ViscosityMethod)
     {
-        *(short *)(value) = (short)sm.simulation->getViscosityMethod();
+        *(short*)(value) = (short)sm.simulation->getViscosityMethod();
     }
     else if(p->id == ParameterIDs::WCSPH_Stiffness)
     {
-        *(Real *)(value) = sm.model.getStiffness();
+        *(Real*)(value) = sm.model.getStiffness();
     }
     else if(p->id == ParameterIDs::WCSPH_Exponent)
     {
-        *(Real *)(value) = sm.model.getExponent();
+        *(Real*)(value) = sm.model.getExponent();
     }
     else if(p->id == ParameterIDs::DFSPH_EnableDivergenceSolver)
     {
-        *(bool *)(value) = sm.model.getEnableDivergenceSolver();
+        *(bool*)(value) = sm.model.getEnableDivergenceSolver();
     }
     else if(p->id == ParameterIDs::CFL_Method)
     {
-        *(short *)(value) = (short)sm.simulation->getCflMethod();
+        *(short*)(value) = (short)sm.simulation->getCflMethod();
     }
     else if(p->id == ParameterIDs::CFL_Factor)
     {
-        *(Real *)(value) = sm.simulation->getCflFactor();
+        *(Real*)(value) = sm.simulation->getCflFactor();
     }
     else if(p->id == ParameterIDs::CFL_MaxTimeStepSize)
     {
-        *(Real *)(value) = sm.simulation->getCflMaxTimeStepSize();
+        *(Real*)(value) = sm.simulation->getCflMaxTimeStepSize();
     }
     else if(p->id == ParameterIDs::Kernel_Method)
     {
-        *(short *)(value) = (short)sm.model.getKernel();
+        *(short*)(value) = (short)sm.model.getKernel();
     }
     else if(p->id == ParameterIDs::GradKernel_Method)
     {
-        *(short *)(value) = (short)sm.model.getGradKernel();
+        *(short*)(value) = (short)sm.model.getGradKernel();
     }
     else if(p->id == ParameterIDs::MaxIterations)
     {
-        *(unsigned int *)(value) = sm.simulation->getMaxIterations();
+        *(unsigned int*)(value) = sm.simulation->getMaxIterations();
     }
     else if(p->id == ParameterIDs::MaxError)
     {
-        *(Real *)(value) = sm.simulation->getMaxError();
+        *(Real*)(value) = sm.simulation->getMaxError();
     }
     else if(p->id == ParameterIDs::MaxIterationsV)
     {
-        *(unsigned int *)(value) = sm.simulation->getMaxIterationsV();
+        *(unsigned int*)(value) = sm.simulation->getMaxIterationsV();
     }
     else if(p->id == ParameterIDs::MaxErrorV)
     {
-        *(Real *)(value) = sm.simulation->getMaxErrorV();
+        *(Real*)(value) = sm.simulation->getMaxErrorV();
     }
 }
 
@@ -663,8 +669,8 @@ void DemoBase::renderFluid()
 
     const unsigned int nParticles = m_simulationMethod.model.numParticles();
 
-    float surfaceColor[4] ={0.2f, 0.6f, 0.8f, 1};
-    float speccolor[4] ={1.0, 1.0, 1.0, 1.0};
+    float              surfaceColor[4] = { 0.2f, 0.6f, 0.8f, 1 };
+    float              speccolor[4]    = { 1.0, 1.0, 1.0, 1.0 };
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, surfaceColor);
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, surfaceColor);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, speccolor);
@@ -673,12 +679,12 @@ void DemoBase::renderFluid()
 
 
     const Real supportRadius = m_simulationMethod.model.getSupportRadius();
-    Real vmax = 0.4*2.0*supportRadius / TimeManager::getCurrent()->getTimeStepSize();
-    Real vmin = 0.0;
+    Real       vmax          = 0.4 * 2.0 * supportRadius / TimeManager::getCurrent()->getTimeStepSize();
+    Real       vmin          = 0.0;
 
     if(MiniGL::checkOpenGLVersion(3, 3))
     {
-        float fluidColor[4] ={0.3f, 0.5f, 0.9f, 1.0f};
+        float fluidColor[4] = { 0.3f, 0.5f, 0.9f, 1.0f };
         pointShaderBegin(&fluidColor[0]);
 
         if(m_simulationMethod.model.numParticles() > 0)
@@ -702,9 +708,9 @@ void DemoBase::renderFluid()
         for(unsigned int i = 0; i < nParticles; i++)
         {
             Real v = m_simulationMethod.model.getVelocity(0, i).norm();
-            v = 0.5*((v - vmin) / (vmax - vmin));
-            v = min(128.0*v*v, 0.5);
-            float fluidColor[4] ={0.2f, 0.2f, 0.2f, 1.0};
+            v = 0.5 * ((v - vmin) / (vmax - vmin));
+            v = min(128.0 * v * v, 0.5);
+            float fluidColor[4] = { 0.2f, 0.2f, 0.2f, 1.0 };
             MiniGL::hsvToRgb(0.55f, 1.0f, 0.5f + (float)v, fluidColor);
 
             glColor3fv(fluidColor);
@@ -715,13 +721,13 @@ void DemoBase::renderFluid()
     }
 
 
-    float red[4] ={0.8f, 0.0f, 0.0f, 1};
+    float red[4] = { 0.8f, 0.0f, 0.0f, 1 };
     if(MiniGL::checkOpenGLVersion(3, 3))
     {
         pointShaderBegin(&red[0]);
         if(getSelectedParticles().size() > 0)
         {
-            glUniform1f(m_shader.getUniform("radius"), (float)m_scene.particleRadius*1.05f);
+            glUniform1f(m_shader.getUniform("radius"), (float)m_scene.particleRadius * 1.05f);
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 0, &m_simulationMethod.model.getPosition(0, 0));
             glEnableVertexAttribArray(1);
@@ -750,33 +756,33 @@ void DemoBase::renderFluid()
 }
 
 
-void DemoBase::mouseMove(int x, int y, void *clientData)
+void DemoBase::mouseMove(int x, int y, void* clientData)
 {
-    DemoBase *base = (DemoBase*)clientData;
+    DemoBase*      base = (DemoBase*)clientData;
 
-    Vector3r mousePos;
+    Vector3r       mousePos;
     MiniGL::unproject(x, y, mousePos);
     const Vector3r diff = mousePos - base->m_oldMousePos;
 
-    TimeManager *tm = TimeManager::getCurrent();
-    const Real h = tm->getTimeStepSize();
+    TimeManager*   tm = TimeManager::getCurrent();
+    const Real     h  = tm->getTimeStepSize();
 
     for(unsigned int j = 0; j < base->m_selectedParticles.size(); j++)
     {
-        base->m_simulationMethod.model.getVelocity(0, base->m_selectedParticles[j]) += 5.0*diff / h;
+        base->m_simulationMethod.model.getVelocity(0, base->m_selectedParticles[j]) += 5.0 * diff / h;
     }
     base->m_oldMousePos = mousePos;
 }
 
-void DemoBase::selection(const Eigen::Vector2i &start, const Eigen::Vector2i &end, void *clientData)
+void DemoBase::selection(const Eigen::Vector2i& start, const Eigen::Vector2i& end, void* clientData)
 {
-    DemoBase *base = (DemoBase*)clientData;
+    DemoBase*                 base = (DemoBase*)clientData;
 
     std::vector<unsigned int> hits;
     base->m_selectedParticles.clear();
     Selection::selectRect(start, end, &base->m_simulationMethod.model.getPosition(0, 0),
-                          &base->m_simulationMethod.model.getPosition(0, base->m_simulationMethod.model.numParticles() - 1),
-                          base->m_selectedParticles);
+        &base->m_simulationMethod.model.getPosition(0, base->m_simulationMethod.model.numParticles() - 1),
+        base->m_selectedParticles);
     if(base->m_selectedParticles.size() > 0)
         MiniGL::setMouseMoveFunc(GLUT_MIDDLE_BUTTON, mouseMove);
     else

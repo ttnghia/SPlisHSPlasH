@@ -17,7 +17,7 @@
 // Enable memory leak detection
 #ifdef _DEBUG
 #ifndef EIGEN_ALIGN
-#define new DEBUG_NEW 
+#define new DEBUG_NEW
 #endif
 #endif
 
@@ -34,12 +34,12 @@ void updateBoundaryParticles(const bool forceUpdate);
 void updateBoundaryForces();
 void simulationMethodChanged();
 
-DemoBase base;
+DemoBase   base;
 PBDWrapper pbdWrapper;
 
 
-// main 
-int main(int argc, char **argv)
+// main
+int main(int argc, char** argv)
 {
     REPORT_MEMORY_LEAKS;
 
@@ -88,6 +88,8 @@ void reset()
     TimeManager::getCurrent()->setTime(0.0);
 }
 
+
+
 void timeStep()
 {
     if((base.getPauseAt() > 0.0) && (base.getPauseAt() < TimeManager::getCurrent()->getTime()))
@@ -114,7 +116,55 @@ void timeStep()
 
         updateBoundaryParticles(false);
 
-        base.getSimulationMethod().model.writeFrameData(TimeManager::getCurrent()->getTime());
+        int savedFluidFrame = base.getSimulationMethod().model.writeFrameFluidData(TimeManager::getCurrent()->getTime());
+
+
+        static std::vector<Vector3r> vertices;
+        static std::vector<Vector3r> normals;
+
+        if(savedFluidFrame > 0)
+        {
+            auto scene = base.getScene();
+            PBD::SimulationModel&                  model = pbdWrapper.getSimulationModel();
+            PBD::SimulationModel::RigidBodyVector& rb    = model.getRigidBodies();
+            base.m_MeshWriter->reset_buffer();
+            base.m_MeshWriter->getBuffer().push_back(static_cast<unsigned int>(rb.size() - 1));
+
+            for(size_t i = 0; i < rb.size(); i++)
+            {
+                if(!scene.boundaryModels[i]->isWall)
+                {
+                    auto vertexData = rb[i]->getGeometry().getVertexData();
+                    auto mesh       = rb[i]->getGeometry().getMesh();
+
+                    auto nFaces            = mesh.numFaces();
+                    auto faces             = mesh.getFaces();
+                    auto faceVertices      = vertexData.getVertices();
+                    auto faceVertexNormals = mesh.getVertexNormals();
+
+                    vertices.resize(0);
+                    vertices.reserve(nFaces * 3);
+                    normals.resize(0);
+                    normals.reserve(nFaces * 3);
+
+                    for(unsigned int i = 0; i < nFaces; ++i)
+                    {
+                        for(unsigned int j = 0; j < 3; ++j)
+                        {
+                            unsigned int v_index = faces[i * 3 + j];
+                            vertices.push_back((*faceVertices)[v_index]);
+                            normals.push_back(faceVertexNormals[v_index]);
+                        }
+                    }
+
+                    base.m_MeshWriter->getBuffer().push_back(static_cast<unsigned int>(vertices.size()));
+                    base.m_MeshWriter->getBuffer().push_back_to_float_array(vertices, false);
+                    base.m_MeshWriter->getBuffer().push_back_to_float_array(normals, false);
+                }
+            }
+
+            base.m_MeshWriter->flush_buffer_async(savedFluidFrame);
+        }
     }
 }
 
@@ -125,13 +175,13 @@ void simulationMethodChanged()
 
 void renderBoundary()
 {
-    DemoBase::SimulationMethod &simulationMethod = base.getSimulationMethod();
-    Shader &shader = base.getShader();
-    Shader &meshShader = base.getMeshShader();
-    SceneLoader::Scene &scene = base.getScene();
-    const int renderWalls = base.getRenderWalls();
+    DemoBase::SimulationMethod& simulationMethod = base.getSimulationMethod();
+    Shader&                     shader           = base.getShader();
+    Shader&                     meshShader       = base.getMeshShader();
+    SceneLoader::Scene&         scene            = base.getScene();
+    const int                   renderWalls      = base.getRenderWalls();
 
-    float wallColor[4] ={0.1f, 0.6f, 0.6f, 1.0f};
+    float                       wallColor[4] = { 0.1f, 0.6f, 0.6f, 1.0f };
     if((renderWalls == 1) || (renderWalls == 2))
     {
         if(MiniGL::checkOpenGLVersion(3, 3))
@@ -143,7 +193,7 @@ void renderBoundary()
             {
                 if((renderWalls == 1) || (!scene.boundaryModels[body]->isWall))
                 {
-                    FluidModel::RigidBodyParticleObject *rb = simulationMethod.model.getRigidBodyParticleObject(body);
+                    FluidModel::RigidBodyParticleObject* rb = simulationMethod.model.getRigidBodyParticleObject(body);
                     glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 0, &simulationMethod.model.getPosition(body + 1, 0));
                     glDrawArrays(GL_POINTS, 0, rb->numberOfParticles());
                 }
@@ -161,7 +211,7 @@ void renderBoundary()
             {
                 if((renderWalls == 1) || (!scene.boundaryModels[body]->isWall))
                 {
-                    FluidModel::RigidBodyParticleObject *rb = simulationMethod.model.getRigidBodyParticleObject(body);
+                    FluidModel::RigidBodyParticleObject* rb = simulationMethod.model.getRigidBodyParticleObject(body);
                     for(unsigned int i = 0; i < rb->numberOfParticles(); i++)
                     {
                         glColor3fv(wallColor);
@@ -187,20 +237,20 @@ void render()
     // PBD
     //////////////////////////////////////////////////////////////////////////
 
-    PBD::SimulationModel &model = pbdWrapper.getSimulationModel();
-    PBD::SimulationModel::RigidBodyVector &rb = model.getRigidBodies();
+    PBD::SimulationModel&                  model = pbdWrapper.getSimulationModel();
+    PBD::SimulationModel::RigidBodyVector& rb    = model.getRigidBodies();
 
-    const int renderWalls = base.getRenderWalls();
-    SceneLoader::Scene &scene = base.getScene();
+    const int                              renderWalls = base.getRenderWalls();
+    SceneLoader::Scene&                    scene       = base.getScene();
     if((renderWalls == 3) || (renderWalls == 4))
     {
         for(size_t i = 0; i < rb.size(); i++)
         {
-            const PBD::VertexData &vd = rb[i]->getGeometry().getVertexData();
-            const PBD::IndexedFaceMesh &mesh = rb[i]->getGeometry().getMesh();
+            const PBD::VertexData&      vd   = rb[i]->getGeometry().getVertexData();
+            const PBD::IndexedFaceMesh& mesh = rb[i]->getGeometry().getMesh();
             if((renderWalls == 3) || (!scene.boundaryModels[i]->isWall))
             {
-                float *col = &scene.boundaryModels[i]->color[0];
+                float* col = &scene.boundaryModels[i]->color[0];
                 if(!scene.boundaryModels[i]->isWall)
                 {
                     base.meshShaderBegin(col);
@@ -225,9 +275,9 @@ void render()
 
 void initBoundaryData()
 {
-    std::string base_path = FileSystem::getFilePath(base.getSceneFile());
-    SceneLoader::Scene &scene = base.getScene();
-    const bool useCache = base.getUseParticleCaching();
+    std::string         base_path = FileSystem::getFilePath(base.getSceneFile());
+    SceneLoader::Scene& scene     = base.getScene();
+    const bool          useCache  = base.getUseParticleCaching();
 
     for(unsigned int i = 0; i < scene.boundaryModels.size(); i++)
     {
@@ -239,19 +289,19 @@ void initBoundaryData()
         }
 
         // Cache sampling
-        std::string mesh_base_path = FileSystem::getFilePath(scene.boundaryModels[i]->meshFile);
-        std::string mesh_file_name = FileSystem::getFileName(scene.boundaryModels[i]->meshFile);
-        std::string scene_path = FileSystem::getFilePath(base.getSceneFile());
-        std::string scene_file_name = FileSystem::getFileName(base.getSceneFile());
-        string cachePath = scene_path + "/" + mesh_base_path + "/Cache";
-        string particleFileName = FileSystem::normalizePath(cachePath + "/" + scene_file_name + "_" + mesh_file_name + "_" + std::to_string(i) + ".bgeo");
+        std::string                            mesh_base_path   = FileSystem::getFilePath(scene.boundaryModels[i]->meshFile);
+        std::string                            mesh_file_name   = FileSystem::getFileName(scene.boundaryModels[i]->meshFile);
+        std::string                            scene_path       = FileSystem::getFilePath(base.getSceneFile());
+        std::string                            scene_file_name  = FileSystem::getFileName(base.getSceneFile());
+        string                                 cachePath        = scene_path + "/" + mesh_base_path + "/Cache";
+        string                                 particleFileName = FileSystem::normalizePath(cachePath + "/" + scene_file_name + "_" + mesh_file_name + "_" + std::to_string(i) + ".bgeo");
 
-        PBD::SimulationModel &model = pbdWrapper.getSimulationModel();
-        PBD::SimulationModel::RigidBodyVector &rigidBodies = model.getRigidBodies();
-        PBDRigidBody *rb = new PBDRigidBody(rigidBodies[i]);
-        PBD::RigidBodyGeometry &geo = rigidBodies[i]->getGeometry();
-        PBD::IndexedFaceMesh &mesh = geo.getMesh();
-        PBD::VertexData &vd = geo.getVertexData();
+        PBD::SimulationModel&                  model       = pbdWrapper.getSimulationModel();
+        PBD::SimulationModel::RigidBodyVector& rigidBodies = model.getRigidBodies();
+        PBDRigidBody*                          rb          = new PBDRigidBody(rigidBodies[i]);
+        PBD::RigidBodyGeometry&                geo         = rigidBodies[i]->getGeometry();
+        PBD::IndexedFaceMesh&                  mesh        = geo.getMesh();
+        PBD::VertexData&                       vd          = geo.getVertexData();
 
         if(scene.boundaryModels[i]->samplesFile == "")
         {
@@ -289,17 +339,17 @@ void initBoundaryData()
 
 void updateBoundaryParticles(const bool forceUpdate = false)
 {
-    SceneLoader::Scene &scene = base.getScene();
-    const unsigned int nObjects = base.getSimulationMethod().model.numberOfRigidBodyParticleObjects();
+    SceneLoader::Scene& scene    = base.getScene();
+    const unsigned int  nObjects = base.getSimulationMethod().model.numberOfRigidBodyParticleObjects();
     for(unsigned int i = 0; i < nObjects; i++)
     {
-        FluidModel::RigidBodyParticleObject *rbpo = base.getSimulationMethod().model.getRigidBodyParticleObject(i);
-        RigidBodyObject *rbo = rbpo->m_rigidBody;
+        FluidModel::RigidBodyParticleObject* rbpo = base.getSimulationMethod().model.getRigidBodyParticleObject(i);
+        RigidBodyObject*                     rbo  = rbpo->m_rigidBody;
         if(rbo->isDynamic() || forceUpdate)
         {
 #pragma omp parallel default(shared)
             {
-#pragma omp for schedule(static)  
+#pragma omp for schedule(static)
                 for(int j = 0; j < (int)rbpo->numberOfParticles(); j++)
                 {
                     rbpo->m_x[j] = rbo->getRotation() * rbpo->m_x0[j] + rbo->getPosition();
@@ -312,13 +362,13 @@ void updateBoundaryParticles(const bool forceUpdate = false)
 
 void updateBoundaryForces()
 {
-    Real h = TimeManager::getCurrent()->getTimeStepSize();
-    SceneLoader::Scene &scene = base.getScene();
-    const unsigned int nObjects = base.getSimulationMethod().model.numberOfRigidBodyParticleObjects();
+    Real                h        = TimeManager::getCurrent()->getTimeStepSize();
+    SceneLoader::Scene& scene    = base.getScene();
+    const unsigned int  nObjects = base.getSimulationMethod().model.numberOfRigidBodyParticleObjects();
     for(unsigned int i = 0; i < nObjects; i++)
     {
-        FluidModel::RigidBodyParticleObject *rbpo = base.getSimulationMethod().model.getRigidBodyParticleObject(i);
-        RigidBodyObject *rbo = rbpo->m_rigidBody;
+        FluidModel::RigidBodyParticleObject* rbpo = base.getSimulationMethod().model.getRigidBodyParticleObject(i);
+        RigidBodyObject*                     rbo  = rbpo->m_rigidBody;
         if(rbo->isDynamic())
         {
             ((PBDRigidBody*)rbo)->updateTimeStepSize();
@@ -328,7 +378,7 @@ void updateBoundaryForces()
 
             for(int j = 0; j < (int)rbpo->numberOfParticles(); j++)
             {
-                force += rbpo->m_f[j];
+                force  += rbpo->m_f[j];
                 torque += (rbpo->m_x[j] - rbo->getPosition()).cross(rbpo->m_f[j]);
                 rbpo->m_f[j].setZero();
             }

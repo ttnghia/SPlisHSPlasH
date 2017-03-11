@@ -6,18 +6,18 @@ using namespace SPH;
 
 FluidModel::FluidModel()
 {
-    m_density0 = 1000.0;
-    m_particleRadius = 0.025;
-    m_viscosity = 0.02;
-    m_neighborhoodSearch = NULL;
-    m_gravitation = Vector3r(0.0, -9.81, 0.0);
-    m_stiffness = 50000.0;
-    m_exponent = 7.0;
-    m_surfaceTension = 0.05;
+    m_density0               = 1000.0;
+    m_particleRadius         = 0.025;
+    m_viscosity              = 0.02;
+    m_neighborhoodSearch     = NULL;
+    m_gravitation            = Vector3r(0.0, -9.81, 0.0);
+    m_stiffness              = 50000.0;
+    m_exponent               = 7.0;
+    m_surfaceTension         = 0.05;
     m_enableDivergenceSolver = true;
-    m_velocityUpdateMethod = 0;
+    m_velocityUpdateMethod   = 0;
 
-    ParticleObject *fluidParticles = new ParticleObject();
+    ParticleObject* fluidParticles = new ParticleObject();
     m_particleObjects.push_back(fluidParticles);
 
     setKernel(0);
@@ -36,7 +36,7 @@ void FluidModel::cleanupModel()
     {
         if(i > 0)
         {
-            RigidBodyParticleObject *rbpo = ((RigidBodyParticleObject*)m_particleObjects[i]);
+            RigidBodyParticleObject* rbpo = ((RigidBodyParticleObject*)m_particleObjects[i]);
             rbpo->m_boundaryPsi.clear();
             rbpo->m_f.clear();
             delete rbpo->m_rigidBody;
@@ -62,14 +62,14 @@ void FluidModel::reset()
     {
         for(int j = 0; j < (int)m_particleObjects[i]->m_x.size(); j++)
         {
-            RigidBodyParticleObject *rbpo = ((RigidBodyParticleObject*)m_particleObjects[i]);
+            RigidBodyParticleObject* rbpo = ((RigidBodyParticleObject*)m_particleObjects[i]);
             rbpo->m_f[j].setZero();
             rbpo->m_v[j].setZero();
         }
     }
 
     // Fluid
-    for(unsigned int i=0; i < nPoints; i++)
+    for(unsigned int i = 0; i < nPoints; i++)
     {
         const Vector3r& x0 = getPosition0(0, i);
         getPosition(0, i) = x0;
@@ -87,16 +87,16 @@ void FluidModel::reset()
 
 void FluidModel::initMasses()
 {
-    const int nParticles = (int)numParticles();
-    const Real diam = 2.0*m_particleRadius;
+    const int  nParticles = (int)numParticles();
+    const Real diam       = 2.0 * m_particleRadius;
 
 #pragma omp parallel default(shared)
     {
-#pragma omp for schedule(static)  
+#pragma omp for schedule(static)
         for(int i = 0; i < nParticles; i++)
         {
-            setMass(i, 0.8 * diam*diam*diam * m_density0);		// each particle represents a cube with a side length of r		
-                                                                // mass is slightly reduced to prevent pressure at the beginning of the simulation
+            setMass(i, 0.8 * diam * diam * diam * m_density0);              // each particle represents a cube with a side length of r
+                                                                            // mass is slightly reduced to prevent pressure at the beginning of the simulation
         }
     }
 }
@@ -132,7 +132,7 @@ void FluidModel::initModel(const unsigned int nFluidParticles, Vector3r* fluidPa
     // copy fluid positions
 #pragma omp parallel default(shared)
     {
-#pragma omp for schedule(static)  
+#pragma omp for schedule(static)
         for(int i = 0; i < (int)nFluidParticles; i++)
         {
             getPosition0(0, i) = fluidParticles[i];
@@ -147,13 +147,13 @@ void FluidModel::initModel(const unsigned int nFluidParticles, Vector3r* fluidPa
         m_neighborhoodSearch = new CompactNSearch::NeighborhoodSearch(m_supportRadius, false);
     m_neighborhoodSearch->set_radius(m_supportRadius);
 
-    // Fluids 
+    // Fluids
     m_neighborhoodSearch->add_point_set(&getPosition(0, 0)[0], nFluidParticles, true, true);
 
     // Boundary
     for(unsigned int i = 0; i < numberOfRigidBodyParticleObjects(); i++)
     {
-        RigidBodyParticleObject *rb = getRigidBodyParticleObject(i);
+        RigidBodyParticleObject* rb = getRigidBodyParticleObject(i);
         m_neighborhoodSearch->add_point_set(&rb->m_x[0][0], rb->m_x.size(), rb->m_rigidBody->isDynamic(), false);
     }
 
@@ -187,7 +187,7 @@ void FluidModel::updateBoundaryPsi()
             computeBoundaryPsi(body);
     }
 
-    ////////////////////////////////////////////////////////////////////////// 
+    //////////////////////////////////////////////////////////////////////////
     // Compute boundary psi for all dynamic bodies
     //////////////////////////////////////////////////////////////////////////
     for(unsigned int body = 0; body < numberOfRigidBodyParticleObjects(); body++)
@@ -209,25 +209,24 @@ void FluidModel::updateBoundaryPsi()
     m_neighborhoodSearch->point_set(0).enable_neighborsearch(true);
     for(int i = 1; i < m_neighborhoodSearch->point_sets().size(); i++)
         m_neighborhoodSearch->point_set(i).enable_neighborsearch(false);
-
 }
 
 void FluidModel::computeBoundaryPsi(const unsigned int body)
 {
-    const Real density0 = getDensity0();
+    const Real               density0 = getDensity0();
 
-    RigidBodyParticleObject *rb = getRigidBodyParticleObject(body);
-    const unsigned int numBoundaryParticles = rb->numberOfParticles();
+    RigidBodyParticleObject* rb                   = getRigidBodyParticleObject(body);
+    const unsigned int       numBoundaryParticles = rb->numberOfParticles();
 
 #pragma omp parallel default(shared)
     {
-#pragma omp for schedule(static)  
+#pragma omp for schedule(static)
         for(int i = 0; i < (int)numBoundaryParticles; i++)
         {
             Real delta = m_W_zero;
             for(unsigned int j = 0; j < m_neighborhoodSearch->point_set(body + 1).n_neighbors(i); j++)
             {
-                const CompactNSearch::PointID &pid = m_neighborhoodSearch->point_set(body + 1).neighbor(i, j);
+                const CompactNSearch::PointID& pid = m_neighborhoodSearch->point_set(body + 1).neighbor(i, j);
                 if(pid.point_set_id != 0)
                     delta += W(getPosition(body + 1, i) - getPosition(pid.point_set_id, pid.point_id));
             }
@@ -237,9 +236,9 @@ void FluidModel::computeBoundaryPsi(const unsigned int body)
     }
 }
 
-void FluidModel::addRigidBodyObject(RigidBodyObject *rbo, const unsigned int numBoundaryParticles, Vector3r *boundaryParticles)
+void FluidModel::addRigidBodyObject(RigidBodyObject* rbo, const unsigned int numBoundaryParticles, Vector3r* boundaryParticles)
 {
-    RigidBodyParticleObject *rb = new RigidBodyParticleObject();
+    RigidBodyParticleObject* rb = new RigidBodyParticleObject();
     m_particleObjects.push_back(rb);
 
     rb->m_x0.resize(numBoundaryParticles);
@@ -250,11 +249,11 @@ void FluidModel::addRigidBodyObject(RigidBodyObject *rbo, const unsigned int num
 
 #pragma omp parallel default(shared)
     {
-#pragma omp for schedule(static)  
+#pragma omp for schedule(static)
         for(int i = 0; i < (int)numBoundaryParticles; i++)
         {
             rb->m_x0[i] = boundaryParticles[i];
-            rb->m_x[i] = boundaryParticles[i];
+            rb->m_x[i]  = boundaryParticles[i];
             rb->m_v[i].setZero();
             rb->m_f[i].setZero();
         }
@@ -284,8 +283,8 @@ void FluidModel::performNeighborhoodSearchSort()
     //////////////////////////////////////////////////////////////////////////
     for(unsigned int i = 1; i < m_neighborhoodSearch->point_sets().size(); i++)
     {
-        RigidBodyParticleObject *rb = getRigidBodyParticleObject(i - 1);
-        if(rb->m_rigidBody->isDynamic())			// sort only dynamic boundaries
+        RigidBodyParticleObject* rb = getRigidBodyParticleObject(i - 1);
+        if(rb->m_rigidBody->isDynamic())                        // sort only dynamic boundaries
         {
             auto const& d = m_neighborhoodSearch->point_set(i);
             d.sort_field(&rb->m_x0[0]);
@@ -300,7 +299,7 @@ void FluidModel::performNeighborhoodSearchSort()
 void SPH::FluidModel::setParticleRadius(Real val)
 {
     m_particleRadius = val;
-    m_supportRadius = 4.0*m_particleRadius;
+    m_supportRadius  = 4.0 * m_particleRadius;
 
     // init kernel
     Poly6Kernel::setRadius(m_supportRadius);
@@ -330,43 +329,42 @@ void SPH::FluidModel::setKernel(unsigned int val)
     m_kernelMethod = val;
     if(m_kernelMethod == 0)
     {
-        m_W_zero = CubicKernel::W_zero();
+        m_W_zero    = CubicKernel::W_zero();
         m_kernelFct = CubicKernel::W;
     }
     else if(m_kernelMethod == 1)
     {
-        m_W_zero = Poly6Kernel::W_zero();
+        m_W_zero    = Poly6Kernel::W_zero();
         m_kernelFct = Poly6Kernel::W;
     }
     else if(m_kernelMethod == 2)
     {
-        m_W_zero = SpikyKernel::W_zero();
+        m_W_zero    = SpikyKernel::W_zero();
         m_kernelFct = SpikyKernel::W;
     }
     else if(m_kernelMethod == 3)
     {
-        m_W_zero = FluidModel::PrecomputedCubicKernel::W_zero();
+        m_W_zero    = FluidModel::PrecomputedCubicKernel::W_zero();
         m_kernelFct = FluidModel::PrecomputedCubicKernel::W;
     }
 }
 
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-#define AniGen_Lambda 0.5
+#define AniGen_Lambda                 0.1
 #define AniGen_NeighborCountThreshold 25
-#define AniGen_Kr 4
+#define AniGen_Kr                     4
 
 void SPH::FluidModel::generateAniKernels(std::vector<Vector3r>& kernelCenters, std::vector<Matrix3r>& kernelMatrices)
 {
-
-    static Real aniKernelRadius = 8.0 * m_particleRadius;
-    static Real aniKernelRadiusInv = 1.0 / m_particleRadius;
-    static Real aniKernelRadiusSqr = aniKernelRadius*aniKernelRadius;
-    const int numFluidParticles = (int)numParticles();
-    static auto kernelW =[](Real d, Real aniKernelRadiusInv)
-    {
-        return 1.0 - pow(d * aniKernelRadiusInv, 3);
-    };
+    static Real aniKernelRadius    = 8.0 * m_particleRadius;
+    static Real aniKernelRadiusInv = 1.0 / aniKernelRadius;
+    static Real aniKernelRadiusSqr = aniKernelRadius * aniKernelRadius;
+    const int   numFluidParticles  = (int)numParticles();
+    static auto kernelW = [] (Real d, Real aniKernelRadiusInv)
+                          {
+                              return 1.0 - pow(d * aniKernelRadiusInv, 3);
+                          };
 
     kernelCenters.resize(m_particleObjects[0]->m_x.size());
     kernelMatrices.resize(m_particleObjects[0]->m_x.size());
@@ -385,48 +383,48 @@ void SPH::FluidModel::generateAniKernels(std::vector<Vector3r>& kernelCenters, s
 
 #pragma omp parallel default(shared)
     {
-#pragma omp for schedule(static)  
+#pragma omp for schedule(static)
         for(int i = 0; i < numFluidParticles; i++)
         {
-            const Vector3r &xi = getPosition(0, i);
+            const Vector3r& xi = getPosition(0, i);
 
-            Vector3r pposWM = xi;
-            Real sumW = 1.0;
-            unsigned int numNeighbors = static_cast<unsigned int>(aniNeighborhoodSearch->point_set(0).n_neighbors(i));
+            Vector3r        pposWM       = xi;
+            Real            sumW         = 1.0;
+            unsigned int    numNeighbors = static_cast<unsigned int>(aniNeighborhoodSearch->point_set(0).n_neighbors(i));
 
             for(unsigned int j = 0; j < numNeighbors; j++)
             {
-                const CompactNSearch::PointID &particleId = aniNeighborhoodSearch->point_set(0).neighbor(i, j);
-                const Vector3r &xj = getPosition(0, particleId.point_id);
+                const CompactNSearch::PointID& particleId = aniNeighborhoodSearch->point_set(0).neighbor(i, j);
+                const Vector3r&                xj         = getPosition(0, particleId.point_id);
 
-                const Vector3r xij = xj - xi;
-                const Real d2 = xij.squaredNorm();
+                const Vector3r                 xij = xj - xi;
+                const Real                     d2  = xij.squaredNorm();
                 if(d2 < aniKernelRadiusSqr)
                 {
                     const Real wij = kernelW(sqrt(d2), aniKernelRadiusInv);
-                    sumW += wij;
+                    sumW   += wij;
                     pposWM += wij * xj;
                 }
             }
 
             assert(sumW > 0);
-            pposWM /= sumW;
-            kernelCenters[i] = (1.0 - AniGen_Lambda)*xi + AniGen_Lambda*pposWM;
+            pposWM          /= sumW;
+            kernelCenters[i] = (1.0 - AniGen_Lambda) * xi + AniGen_Lambda * pposWM;
 
 
             ////////////////////////////////////////////////////////////////////////////////
             // compute covariance matrix and anisotropy matrix
             unsigned int neighborCount = 0;
-            Matrix3r C = (xi - pposWM)*(xi - pposWM).transpose();
+            Matrix3r     C             = (xi - pposWM) * (xi - pposWM).transpose();
             sumW = 1.0;
 
             for(unsigned int j = 0; j < numNeighbors; j++)
             {
-                const CompactNSearch::PointID &particleId = aniNeighborhoodSearch->point_set(0).neighbor(i, j);
-                const Vector3r &xj = getPosition(0, particleId.point_id);
+                const CompactNSearch::PointID& particleId = aniNeighborhoodSearch->point_set(0).neighbor(i, j);
+                const Vector3r&                xj         = getPosition(0, particleId.point_id);
 
-                const Vector3r xij = xj - pposWM;
-                const Real d2 = xij.squaredNorm();
+                const Vector3r                 xij = xj - pposWM;
+                const Real                     d2  = xij.squaredNorm();
                 if(d2 < aniKernelRadiusSqr)
                 {
                     const Real wij = kernelW(sqrt(d2), aniKernelRadiusInv);
@@ -441,13 +439,13 @@ void SPH::FluidModel::generateAniKernels(std::vector<Vector3r>& kernelCenters, s
             assert(sumW > 0);
             C /= sumW; // = covariance matrix
 
-                       ////////////////////////////////////////////////////////////////////////////////
-                       // compute kernel matrix
+            ////////////////////////////////////////////////////////////////////////////////
+            // compute kernel matrix
             Matrix3r U, S, V;
             SVDDecomposition::svd(C(0, 0), C(0, 1), C(0, 2), C(1, 0), C(1, 1), C(1, 2), C(2, 0), C(2, 1), C(2, 2),
-                                  U(0, 0), U(0, 1), U(0, 2), U(1, 0), U(1, 1), U(1, 2), U(2, 0), U(2, 1), U(2, 2),
-                                  S(0, 0), S(0, 1), S(0, 2), S(1, 0), S(1, 1), S(1, 2), S(2, 0), S(2, 1), S(2, 2),
-                                  V(0, 0), V(0, 1), V(0, 2), V(1, 0), V(1, 1), V(1, 2), V(2, 0), V(2, 1), V(2, 2));
+                U(0, 0), U(0, 1), U(0, 2), U(1, 0), U(1, 1), U(1, 2), U(2, 0), U(2, 1), U(2, 2),
+                S(0, 0), S(0, 1), S(0, 2), S(1, 0), S(1, 1), S(1, 2), S(2, 0), S(2, 1), S(2, 2),
+                V(0, 0), V(0, 1), V(0, 2), V(1, 0), V(1, 1), V(1, 2), V(2, 0), V(2, 1), V(2, 2));
 
             Vector3r sigmas = static_cast<Real>(0.75) * Vector3r(1, 1, 1);
 
@@ -463,20 +461,20 @@ void SPH::FluidModel::generateAniKernels(std::vector<Vector3r>& kernelCenters, s
                 0.0, 0.0, sigmas[2];
             kernelMatrices[i] = U * S * U.transpose();
         }
-
     }
-
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-void SPH::FluidModel::writeFrameData(Real currentTime)
+#include "SPlisHSPlasH/StaticRigidBody.h"
+
+int SPH::FluidModel::writeFrameFluidData(Real currentTime)
 {
     static double savedFrameTime = -1000.0;
-    static int frame = 0;
+    static int    frame          = 0;
 
     if(currentTime < savedFrameTime + m_FrameTime)
     {
-        return;
+        return -1;
     }
 
     savedFrameTime += m_FrameTime;
@@ -503,10 +501,6 @@ void SPH::FluidModel::writeFrameData(Real currentTime)
         m_FluidAnisotropyWriter = new DataIO(m_SaveDataPath, "FluidFrame", "frame", "ani");
     }
 
-    if(m_MeshWriter == nullptr)
-    {
-        m_MeshWriter= new DataIO(m_SaveDataPath, "SolidFrame", "frame", "pos");
-    }
 
     ////////////////////////////////////////////////////////////////////////////////
     static std::vector<Vector3r> kernelCenters;
@@ -527,4 +521,7 @@ void SPH::FluidModel::writeFrameData(Real currentTime)
     m_FluidAnisotropyWriter->reset_buffer();
     m_FluidAnisotropyWriter->getBuffer().push_back_to_float_array(kernelMatrices);
     m_FluidAnisotropyWriter->flush_buffer_async(frame);
+
+    ////////////////////////////////////////////////////////////////////////////////
+    return frame;
 }

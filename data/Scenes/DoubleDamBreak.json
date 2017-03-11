@@ -1,12 +1,12 @@
 {
 	"Configuration": 
 	{
-		"particleRadius": 0.00625
+		"particleRadius": 0.0125
 	},
 	"FrameConfigs": 
 	{
-		"SaveDataPath": "D:/Scratch/SimData/FluidSim",
-		"FrameTime": 0.01
+		"SaveDataPath": "D:/Scratch/SimData/DoubleDamBreak",
+		"FrameTime": 0.0166666666666666
 	},
 	"RigidBodies": [
 		{
@@ -23,13 +23,13 @@
 	"FluidBlocks": [
 		{
 			"denseMode": 0,
-			"start": [-1.5, 0.0, -1.5],
-			"end": [-0.8, 0.75, -0.8]
+			"start": [-1.5, 0.025, -1.5],
+			"end": [-0.5, 1.75, -0.5]
 		}, 
 		{
 			"denseMode": 0,
-			"start": [0.8, 0.0, 0.8],
-			"end": [1.5, 0.75, 1.5]
+			"start": [0.5, 0.025, 0.5],
+			"end": [1.5, 1.75, 1.5]
 		}
 	]
 }
