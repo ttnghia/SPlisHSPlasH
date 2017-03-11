@@ -1,0 +1,1 @@
+.\DynamicBoundaryDemo.exe --no-cache ../data/scenes/TankWithObjects.json

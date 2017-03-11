@@ -8,7 +8,7 @@ using namespace SPH;
 
 
 
-void SceneLoader::readScene(const char *fileName, Scene &scene)
+void SceneLoader::readScene(const char* fileName, Scene& scene)
 {
     std::cout << "Load scene file: " << fileName << "\n";
 
@@ -26,19 +26,21 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
     //////////////////////////////////////////////////////////////////////////
     // read save data path
     //////////////////////////////////////////////////////////////////////////
-    scene.saveDataPath = std::string("D:/Scratch/SimData/FluidSim/");
-    scene.frameTime = 1.0 / 30.0;
+    scene.saveDataPath    = std::string("D:/Scratch/SimData/FluidSim/");
+    scene.frameTime       = 1.0 / 30.0;
+    scene.stabilizingTime = 0;
     if(j.find("FrameConfigs") != j.end())
     {
         nlohmann::json config = j["FrameConfigs"];
 
         readValue(config["SaveDataPath"], scene.saveDataPath);
         readValue(config["FrameTime"], scene.frameTime);
+        readValue(config["StabilizingTime"], scene.stabilizingTime);
     }
 
 
     //////////////////////////////////////////////////////////////////////////
-    // read configuration 
+    // read configuration
     //////////////////////////////////////////////////////////////////////////
     if(j.find("Configuration") != j.end())
     {
@@ -109,8 +111,6 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
 
         scene.enableDivergenceSolver = true;
         readValue(config["enableDivergenceSolver"], scene.enableDivergenceSolver);
-
-
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -119,17 +119,17 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
     if(j.find("RigidBodies") != j.end())
     {
         nlohmann::json boundaryModels = j["RigidBodies"];
-        for(auto& boundaryModel : boundaryModels)
+        for(auto & boundaryModel : boundaryModels)
         {
             std::string particleFile = "";
-            std::string meshFile = "";
-            const bool bMesh = readValue<std::string>(boundaryModel["geometryFile"], meshFile);
-            const bool bSamples = readValue<std::string>(boundaryModel["particleFile"], particleFile);
+            std::string meshFile     = "";
+            const bool  bMesh        = readValue < std::string > (boundaryModel["geometryFile"], meshFile);
+            const bool  bSamples     = readValue < std::string > (boundaryModel["particleFile"], particleFile);
 
             if(bMesh || bSamples)
             {
-                BoundaryData *data = new BoundaryData();
-                data->meshFile = meshFile;
+                BoundaryData* data = new BoundaryData();
+                data->meshFile    = meshFile;
                 data->samplesFile = particleFile;
 
                 // translation
@@ -137,11 +137,11 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
                 readVector(boundaryModel["translation"], data->translation);
 
                 // rotation axis
-                Vector3r axis = Vector3r::Zero();
-                Real angle = 0.0;
+                Vector3r axis  = Vector3r::Zero();
+                Real     angle = 0.0;
                 data->rotation = Matrix3r::Identity();
                 if(readVector(boundaryModel["rotationAxis"], axis) &&
-                   readValue<Real>(boundaryModel["rotationAngle"], angle))
+                   readValue < Real > (boundaryModel["rotationAngle"], angle))
                     data->rotation = AngleAxisr(angle, axis);
 
                 // scale
@@ -149,10 +149,10 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
                 readVector(boundaryModel["scale"], data->scale);
 
                 data->dynamic = false;
-                readValue<bool>(boundaryModel["isDynamic"], data->dynamic);
+                readValue < bool > (boundaryModel["isDynamic"], data->dynamic);
 
                 data->isWall = false;
-                readValue<bool>(boundaryModel["isWall"], data->isWall);
+                readValue < bool > (boundaryModel["isWall"], data->isWall);
 
                 data->color = Eigen::Vector4f(1.0f, 0.0f, 0.0f, 0.0f);
                 readVector(boundaryModel["color"], data->color);
@@ -169,12 +169,12 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
     if(j.find("FluidModels") != j.end())
     {
         nlohmann::json fluidModels = j["FluidModels"];
-        for(auto& fluidModel : fluidModels)
+        for(auto & fluidModel : fluidModels)
         {
             std::string particleFile;
-            if(readValue<std::string>(fluidModel["particleFile"], particleFile))
+            if(readValue < std::string > (fluidModel["particleFile"], particleFile))
             {
-                FluidData *data = new FluidData();
+                FluidData* data = new FluidData();
                 data->samplesFile = particleFile;
 
                 // translation
@@ -182,11 +182,11 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
                 readVector(fluidModel["translation"], data->translation);
 
                 // rotation axis
-                Vector3r axis = Vector3r::Zero();
-                Real angle = 0.0;
+                Vector3r axis  = Vector3r::Zero();
+                Real     angle = 0.0;
                 data->rotation = Matrix3r::Identity();
                 if(readVector(fluidModel["rotationAxis"], axis) &&
-                   readValue<Real>(fluidModel["rotationAngle"], angle))
+                   readValue < Real > (fluidModel["rotationAngle"], angle))
                     data->rotation = AngleAxisr(angle, axis);
 
                 // scale
@@ -204,7 +204,7 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
     if(j.find("FluidBlocks") != j.end())
     {
         nlohmann::json fluidBlocks = j["FluidBlocks"];
-        for(auto& fluidBlock : fluidBlocks)
+        for(auto & fluidBlock : fluidBlocks)
         {
             // translation
             Vector3r translation = Vector3r::Zero();
@@ -218,7 +218,7 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
             if(readVector(fluidBlock["start"], minX) &&
                readVector(fluidBlock["end"], maxX))
             {
-                FluidBlock *block = new FluidBlock();
+                FluidBlock* block = new FluidBlock();
                 block->box.m_minX[0] = scale[0] * minX[0] + translation[0];
                 block->box.m_minX[1] = scale[1] * minX[1] + translation[1];
                 block->box.m_minX[2] = scale[2] * minX[2] + translation[2];
@@ -235,18 +235,18 @@ void SceneLoader::readScene(const char *fileName, Scene &scene)
 }
 
 
-template <>
-bool SceneLoader::readValue(const nlohmann::json &j, bool &v)
+template < >
+bool SceneLoader::readValue(const nlohmann::json& j, bool& v)
 {
     if(j.is_null())
         return false;
 
     if(j.is_number_integer())
     {
-        int val = j.get<int>();
+        int val = j.get < int > ();
         v = val != 0;
     }
     else
-        v = j.get<bool>();
+        v = j.get < bool > ();
     return true;
 }

@@ -105,6 +105,10 @@ void timeStep()
         base.getSimulationMethod().simulation->step();
         STOP_TIMING_AVG;
 
+        // if fluid is stabilizing, then don't update solid
+        if(TimeManager::getCurrent()->getTime() < base.getScene().stabilizingTime)
+            continue;
+
         updateBoundaryForces();
 
         //////////////////////////////////////////////////////////////////////////
@@ -119,8 +123,8 @@ void timeStep()
         int savedFluidFrame = base.getSimulationMethod().model.writeFrameFluidData(TimeManager::getCurrent()->getTime());
 
 
-        static std::vector<Vector3r> vertices;
-        static std::vector<Vector3r> normals;
+        static std::vector < Vector3r > vertices;
+        static std::vector < Vector3r > normals;
 
         if(savedFluidFrame > 0)
         {
@@ -128,7 +132,7 @@ void timeStep()
             PBD::SimulationModel&                  model = pbdWrapper.getSimulationModel();
             PBD::SimulationModel::RigidBodyVector& rb    = model.getRigidBodies();
             base.m_MeshWriter->reset_buffer();
-            base.m_MeshWriter->getBuffer().push_back(static_cast<unsigned int>(rb.size() - 1));
+            base.m_MeshWriter->getBuffer().push_back(static_cast < unsigned int > (rb.size() - 1));
 
             for(size_t i = 0; i < rb.size(); i++)
             {
@@ -157,7 +161,7 @@ void timeStep()
                         }
                     }
 
-                    base.m_MeshWriter->getBuffer().push_back(static_cast<unsigned int>(vertices.size()));
+                    base.m_MeshWriter->getBuffer().push_back(static_cast < unsigned int > (vertices.size()));
                     base.m_MeshWriter->getBuffer().push_back_to_float_array(vertices, false);
                     base.m_MeshWriter->getBuffer().push_back_to_float_array(normals, false);
                 }
@@ -281,7 +285,7 @@ void initBoundaryData()
 
     for(unsigned int i = 0; i < scene.boundaryModels.size(); i++)
     {
-        std::vector<Vector3r> boundaryParticles;
+        std::vector < Vector3r > boundaryParticles;
         if(scene.boundaryModels[i]->samplesFile != "")
         {
             string particleFileName = base_path + "/" + scene.boundaryModels[i]->samplesFile;
@@ -332,7 +336,7 @@ void initBoundaryData()
             for(unsigned int j = 0; j < boundaryParticles.size(); j++)
                 boundaryParticles[j] = rb->getRotation().transpose() * (boundaryParticles[j] - rb->getPosition());
         }
-        base.getSimulationMethod().model.addRigidBodyObject(rb, static_cast<unsigned int>(boundaryParticles.size()), &boundaryParticles[0]);
+        base.getSimulationMethod().model.addRigidBodyObject(rb, static_cast < unsigned int > (boundaryParticles.size()), &boundaryParticles[0]);
     }
     updateBoundaryParticles(true);
 }

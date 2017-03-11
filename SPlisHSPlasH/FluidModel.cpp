@@ -469,7 +469,7 @@ void SPH::FluidModel::generateAniKernels(std::vector<Vector3r>& kernelCenters, s
 
 int SPH::FluidModel::writeFrameFluidData(Real currentTime)
 {
-    static double savedFrameTime = -1000.0;
+    static double savedFrameTime = -1000000000.0;
     static int    frame          = 0;
 
     if(currentTime < savedFrameTime + m_FrameTime)
