@@ -3,3 +3,5 @@ extern/**
 build/**
 lib/**
 data/models/Cache/**
+bin/*.exe
+bin/*.pdb
