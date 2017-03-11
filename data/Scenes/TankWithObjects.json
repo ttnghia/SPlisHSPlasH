@@ -1,7 +1,7 @@
 {
 	"Configuration": 
 	{
-		"particleRadius": 0.02
+		"particleRadius": 0.0225
 	},
 	"FrameConfigs": 
 	{
@@ -61,7 +61,7 @@
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0.0,
 			"scale": [0.35, 0.35, 0.35],
-			"velocity": [0,10,0],
+			"velocity": [0,0,0],
 			"restitution" : 0.6,
 			"friction" : 0.2,
 			"color": [0.3, 0.5, 0.8, 1.0], 
@@ -77,7 +77,7 @@
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0.0,
 			"scale": [0.35, 0.35, 0.35],
-			"velocity": [0,10,0],
+			"velocity": [0,0,0],
 			"restitution" : 0.6,
 			"friction" : 0.2,
 			"color": [0.3, 0.5, 0.8, 1.0], 
@@ -93,7 +93,7 @@
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0.0,
 			"scale": [0.35, 0.35, 0.35],
-			"velocity": [0,10,0],
+			"velocity": [0,0,0],
 			"restitution" : 0.6,
 			"friction" : 0.2,
 			"color": [0.3, 0.5, 0.8, 1.0], 
@@ -109,7 +109,7 @@
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0.0,
 			"scale": [0.35, 0.35, 0.35],
-			"velocity": [0,10,0],
+			"velocity": [0,0,0],
 			"restitution" : 0.6,
 			"friction" : 0.2,
 			"color": [0.3, 0.5, 0.8, 1.0], 
@@ -125,7 +125,7 @@
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0.0,
 			"scale": [0.35, 0.35, 0.35],
-			"velocity": [0,10,0],
+			"velocity": [0,0,0],
 			"restitution" : 0.6,
 			"friction" : 0.2,
 			"color": [0.3, 0.5, 0.8, 1.0], 
@@ -136,8 +136,8 @@
 	"FluidBlocks": [
 		{
 			"denseMode": 0,
-			"start": [-2.98, 0.0, -0.98],
-			"end": [2.98, 1.5, 0.98],
+			"start": [-2.95, 0.0, -0.98],
+			"end": [2.95, 1.5, 0.98],
 			"translation": [0, 0.0, 0.0],
 			"scale": [1,1,1]
 		}
