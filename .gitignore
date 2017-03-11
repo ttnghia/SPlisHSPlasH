@@ -1,1 +1,5 @@
 **/*.VC.db
+extern/**
+build/**
+lib/**
+data/models/Cache/**
