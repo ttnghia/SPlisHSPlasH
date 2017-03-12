@@ -480,9 +480,9 @@ int SPH::FluidModel::writeFrameFluidData(Real currentTime)
     savedFrameTime += m_FrameTime;
     ++frame;
 
-    // for saving frame at t=0
+    // for saving frame the first time
     if(savedFrameTime < 0)
-        savedFrameTime = 0;
+        savedFrameTime = currentTime;
 
 
     ////////////////////////////////////////////////////////////////////////////////
