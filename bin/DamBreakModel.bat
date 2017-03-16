@@ -1,1 +1,1 @@
-.\StaticBoundaryDemo.exe ../data/scenes/DamBreakModel.json
+.\StaticBoundaryDemo.exe --no-cache ../data/scenes/DamBreakModel.json

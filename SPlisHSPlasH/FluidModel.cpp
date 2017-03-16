@@ -351,7 +351,7 @@ void SPH::FluidModel::setKernel(unsigned int val)
 
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-#define AniGen_Lambda                 0.1
+#define AniGen_Lambda                 0.0
 #define AniGen_NeighborCountThreshold 25
 #define AniGen_Kr                     4
 
@@ -447,7 +447,7 @@ void SPH::FluidModel::generateAniKernels(std::vector<Vector3r>& kernelCenters, s
                 S(0, 0), S(0, 1), S(0, 2), S(1, 0), S(1, 1), S(1, 2), S(2, 0), S(2, 1), S(2, 2),
                 V(0, 0), V(0, 1), V(0, 2), V(1, 0), V(1, 1), V(1, 2), V(2, 0), V(2, 1), V(2, 2));
 
-            Vector3r sigmas = static_cast<Real>(0.75) * Vector3r(1, 1, 1);
+            Vector3r sigmas = static_cast<Real>(0.5) * Vector3r(1, 1, 1);
 
             if(neighborCount > AniGen_NeighborCountThreshold)
             {
