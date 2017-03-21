@@ -1,1 +1,1 @@
-.\StaticBoundaryDemo.exe ../data/scenes/DoubleDamBreak.json
+.\StaticBoundaryDemo.exe --no-cache ../data/scenes/DoubleDamBreak.json

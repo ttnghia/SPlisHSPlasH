@@ -1,12 +1,13 @@
 {
 	"Configuration": 
 	{
+	    "cflFactor": 0.3,
 		"particleRadius": 0.0225
 	},
 	"FrameConfigs": 
 	{
-		"SaveDataPath": "D:/Scratch/SimData/TankWithObjects",
-		"FrameTime": 0.0166666666666666,
+		"SaveDataPath": "D:/Scratch/SimData/TankWithSpheres",
+		"FrameTime": 0.0333333333,
 		"StabilizingTime" : 5.0
 	},
 	"Simulation": 

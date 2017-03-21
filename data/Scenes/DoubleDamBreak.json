@@ -1,12 +1,13 @@
 {
 	"Configuration": 
 	{
+	    "cflFactor": 0.3,
 		"particleRadius": 0.0125
 	},
 	"FrameConfigs": 
 	{
 		"SaveDataPath": "D:/Scratch/SimData/DoubleDamBreak",
-		"FrameTime": 0.0166666666666666
+		"FrameTime": 0.0333333333
 	},
 	"RigidBodies": [
 		{

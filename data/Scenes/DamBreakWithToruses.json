@@ -1,12 +1,13 @@
 {
 	"Configuration": 
 	{
+	    "cflFactor": 0.3,
 		"particleRadius": 0.017
 	},
 	"FrameConfigs": 
 	{
 		"SaveDataPath": "D:/Scratch/SimData/DamBreakWithToruses",
-		"FrameTime": 0.0166666666666666
+		"FrameTime": 0.0333333333
 	},
 
 	"Simulation": 

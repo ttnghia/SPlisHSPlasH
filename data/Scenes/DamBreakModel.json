@@ -2,7 +2,7 @@
 	"FrameConfigs": 
 	{
 		"SaveDataPath": "D:/Scratch/SimData/DamBreak",
-		"FrameTime": 0.0166666666666666
+		"FrameTime": 0.0333333333
 	},
 	"Configuration": 
 	{
@@ -16,7 +16,7 @@
 		"surfaceTension": 0.2,
 		"surfaceTensionMethod": 0,
 		"cflMethod": 1, 
-		"cflFactor": 0.5,
+		"cflFactor": 0.3,
 		"cflMaxTimeStepSize": 0.005,
 		"maxIterations": 100,
 		"maxError": 0.01,
