@@ -1,0 +1,31 @@
+{
+	"Configuration": 
+	{
+	    "cflFactor": 0.3,
+		"particleRadius": 0.015
+	},
+	"FrameConfigs": 
+	{
+		"SaveDataPath": "D:/Scratch/SimData/WaterBallDrop",
+		"FrameTime": 0.0333333333
+	},
+	"RigidBodies": [
+		{
+			"geometryFile": "../models/UnitBox.obj",
+			"translation": [0,2.5,0],
+			"rotationAxis": [1, 0, 0],
+			"rotationAngle": 0,
+			"scale": [3.1, 5, 3.1],
+			"color": [0.1, 0.4, 0.6, 1.0], 
+			"isDynamic": false,
+			"isWall": true
+		}
+	],
+	"FluidBlocks": [
+		{
+			"denseMode": 0,
+			"start": [-0.7, 0.5, -0.7],
+			"end": [0.7, 1.9, 0.7]
+		}
+	]	
+}
